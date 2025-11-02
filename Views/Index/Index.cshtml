@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "Student Page";
+}
+
+<h2>Student Management</h2>
+
+
+<button id="AddStudent">Add Student</button>
+<button id="GetAllStudent">Get All Student</button>
+
+<div id="Result"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $("#GetAllStudent").click(function(){
+        $.ajax({
+            url:'/Index/GetAllStudent',
+            type:'GET',
+            success:function(response){
+                if(response.success)
+                {
+                    let html = "<ul>"
+                    response.data.forEach(function(s){
+                        html += `<li>${s.id}  ${s.name} ${s.city}</li>`;
+                    });
+                    html += "</ul>";
+                    $("#Result").html(html);
+                }
+            },
+            error:function(){
+                $("#Result").html("<h2>No Data Found</h2>");
+            }
+        });
+    });
+
+
+    $("#AddStudent").click(function(){
+        let student = {
+            Name:"Dhr2",
+            Age:2,
+            City:"Ahme"
+        }
+        $.ajax({
+            url:'/Index/AddStudent',
+            type:'POST',
+            data:student,
+            success:function(response){
+                if(response.success)
+                alert(response.message);
+                else 
+                alert(response.message);
+            },
+            error:function(){
+                alert("erroe whil;e Addinfg Studdent");
+            }
+
+
+        });
+    });
+</script>
