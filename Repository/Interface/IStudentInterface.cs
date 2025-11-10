@@ -13,5 +13,7 @@ namespace practice1.Repository.Interface
         //public Task<Student> GetStudentByIdRepo(int Id);
 
         //public Task<int> DeleteStudentRepo(int Id);
+        public Task<List<Student>> GetStateData();
+        public Task<List<Student>> GetCityData(int StateID);
     }
 }

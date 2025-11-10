@@ -18,12 +18,12 @@ namespace practice1.Middleware2
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            Console.WriteLine($"➡️ Request: {context.Request.Method} {context.Request.Path}");
+            Console.WriteLine($" Request: {context.Request.Method} {context.Request.Path}");
 
             await _next(context); // Call next middleware or controller
 
             stopwatch.Stop();
-            Console.WriteLine($"✅ Response: {context.Response.StatusCode}, Time: {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($" Response: {context.Response.StatusCode}, Time: {stopwatch.ElapsedMilliseconds} ms");
         }
     }
 }

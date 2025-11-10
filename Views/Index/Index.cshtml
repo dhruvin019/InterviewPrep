@@ -1,61 +1,246 @@
 ﻿@{
-    ViewData["Title"] = "Student Page";
+    ViewData["Title"] = "Student Form";
 }
 
-<h2>Student Management</h2>
+<h2>Student Registration</h2>
 
+<form id="studentForm">
+    <div>
+        <label>Name:</label>
+        <input type="text" id="Name" name="Name" required class="form-control" />
+    </div>
 
-<button id="AddStudent">Add Student</button>
-<button id="GetAllStudent">Get All Student</button>
+    <div>
+        <label>Age:</label>
+        <input type="number" id="Age" name="Age" min="5" max="100" required class="form-control" />
+    </div>
 
-<div id="Result"></div>
+    <div>
+        <label>Gender:</label><br />
+        <input type="radio" name="Gender" value="Male" /> Male
+        <input type="radio" name="Gender" value="Female" /> Female
+        <input type="radio" name="Gender" value="Other" /> Other
+    </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <div>
+        <label>Hobby:</label><br />
+        <input type="checkbox" name="Hobby" value="Reading" /> Reading
+        <input type="checkbox" name="Hobby" value="Sports" /> Sports
+        <input type="checkbox" name="Hobby" value="Music" /> Music
+    </div>
 
-<script>
-    $("#GetAllStudent").click(function(){
-        $.ajax({
-            url:'/Index/GetAllStudent',
-            type:'GET',
-            success:function(response){
-                if(response.success)
-                {
-                    let html = "<ul>"
-                    response.data.forEach(function(s){
-                        html += `<li>${s.id}  ${s.name} ${s.city}</li>`;
-                    });
-                    html += "</ul>";
-                    $("#Result").html(html);
+    <div>
+        <label>State:</label>
+        <select id="StateId" name="StateId" class="form-control">
+            <option value="">-- Select State --</option>
+        </select>
+    </div>
+
+    <div>
+        <label>City:</label>
+        <select id="CityId" name="CityId" class="form-control">
+            <option value="">-- Select City --</option>
+        </select>
+    </div>
+
+    <br />
+    <button type="button" id="btnSubmit" class="btn btn-primary">Submit</button>
+</form>
+
+<hr />
+
+<h3>All Students</h3>
+<button type="button" id="btnLoad" class="btn btn-secondary">Load Students</button>
+
+<table id="studentTable" border="1" cellpadding="5" cellspacing="0" style="margin-top:10px; width:100%;">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>City</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Load States on Page Load
+        $(document).ready(function () {
+            loadStates();
+
+            // When state changes -> load cities
+            $('#StateId').change(function () {
+                let stateId = $(this).val();
+                if (stateId) {
+                    loadCities(stateId);
+                } else {
+                    $('#CityId').empty().append('<option value="">-- Select City --</option>');
                 }
-            },
-            error:function(){
-                $("#Result").html("<h2>No Data Found</h2>");
-            }
+            });
+
+            // Submit form
+            $('#btnSubmit').click(function () {
+                submitStudent();
+            });
         });
-    });
+
+        $('#btnLoad').click(function () {
+            $.get('/Index/GetAllStudent', function (res) {
+                if (res.success) {
+                    let rows = '';
+                    $.each(res.data, function (i, s) {
+                        rows += `<tr>
+                                    <td>${s.id}</td>
+                                    <td>${s.name}</td>
+                                    <td>${s.age}</td>
+                                    <td>${s.city}</td>
+                                 </tr>`;
+                    });
+                    $('#studentTable tbody').html(rows);
+                } else {
+                    $('#studentTable tbody').html(`<tr><td colspan="4">${res.message}</td></tr>`);
+                }
+            });
+        });
 
 
-    $("#AddStudent").click(function(){
-        let student = {
-            Name:"Dhr2",
-            Age:2,
-            City:"Ahme"
+        function loadStates() {
+            $.ajax({
+                url: '/Index/GetStateData',
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        $('#StateId').empty().append('<option value="">-- Select State --</option>');
+                        $.each(response.data, function (i, state) {
+                            $('#StateId').append('<option value="' + state.value + '">' + state.text + '</option>');
+                        });
+                    }
+                    else {
+                        alert(response.message);
+                    }
+                }
+            });
         }
-        $.ajax({
-            url:'/Index/AddStudent',
-            type:'POST',
-            data:student,
-            success:function(response){
-                if(response.success)
-                alert(response.message);
-                else 
-                alert(response.message);
-            },
-            error:function(){
-                alert("erroe whil;e Addinfg Studdent");
-            }
+
+        function loadCities(stateId) {
+            $.ajax({
+                url: '/Index/GetCityData?StateID=' + stateId,
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        $('#CityId').empty().append('<option value="">-- Select City --</option>');
+                        $.each(response.data, function (i, city) {
+                            $('#CityId').append('<option value="' + city.value + '">' + city.text + '</option>');
+                        });
+                    } else {
+                        $('#CityId').empty().append('<option value="">No Cities Found</option>');
+                    }
+                }
+            });
+        }
+
+        function submitStudent() {
+            let selectedHobbies = [];
+            $('input[name="Hobby"]:checked').each(function () {
+                selectedHobbies.push($(this).val());
+            });
+
+            let student = {
+                Name: $('#Name').val(),
+                Age: parseInt($('#Age').val()),
+                Gender: $('input[name="Gender"]:checked').val(),
+                Hobby: selectedHobbies.join(', '),
+                City: $('#CityId option:selected').text(),
+                Text: $('#CityId option:selected').text(),
+                Value: parseInt($('#CityId').val()) || 0
+            };
+
+            $.ajax({
+                url: '/Index/AddStudent',
+                type: 'POST',
+                data: student,
+                success: function (response) {
+                    if (response.success) {
+                        $('#result').html('<p style="color:green;">' + response.message + '</p>');
+                        $('#studentForm')[0].reset();
+                    } else {
+                        $('#result').html('<p style="color:red;">' + response.message + '</p>');
+                    }
+                },
+                error: function (xhr) {
+                    $('#result').html('<p style="color:red;">Error occurred: ' + xhr.responseText + '</p>');
+                }
+            });
+        }
+    </script>
+}
 
 
-        });
-    });
-</script>
+
+
+
+
+@* @{ *@
+@*     ViewData["Title"] = "Student Page"; *@
+@* } *@
+
+@* <h2>Student Management</h2> *@
+
+
+@* <button id="AddStudent">Add Student</button> *@
+@* <button id="GetAllStudent">Get All Student</button> *@
+
+@* <div id="Result"></div> *@
+
+@* <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+
+@* <script> *@
+@*     $("#GetAllStudent").click(function(){ *@
+@*         $.ajax({ *@
+@*             url:'/Index/GetAllStudent', *@
+@*             type:'GET', *@
+@*             success:function(response){ *@
+@*                 if(response.success) *@
+@*                 { *@
+@*                     let html = "<ul>" *@
+@*                     response.data.forEach(function(s){ *@
+@*                         html += `<li>${s.id}  ${s.name} ${s.city}</li>`; *@
+@*                     }); *@
+@*                     html += "</ul>"; *@
+@*                     $("#Result").html(html); *@
+@*                 } *@
+@*             }, *@
+@*             error:function(){ *@
+@*                 $("#Result").html("<h2>No Data Found</h2>"); *@
+@*             } *@
+@*         }); *@
+@*     }); *@
+
+
+@*     $("#AddStudent").click(function(){ *@
+@*         let student = { *@
+@*             Name:"Dhr2", *@
+@*             Age:2, *@
+@*             City:"Ahme" *@
+@*         } *@
+@*         $.ajax({ *@
+@*             url:'/Index/AddStudent', *@
+@*             type:'POST', *@
+@*             data:student, *@
+@*             success:function(response){ *@
+@*                 if(response.success) *@
+@*                 alert(response.message); *@
+@*                 else  *@
+@*                 alert(response.message); *@
+@*             }, *@
+@*             error:function(){ *@
+@*                 alert("erroe while Addinfg Studdent"); *@
+@*             } *@
+
+
+@*         }); *@
+@*     }); *@
+@* </script> *@

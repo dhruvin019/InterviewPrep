@@ -33,6 +33,35 @@ namespace practice1.Controllers
 
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetStateData()
+        {
+            var student = await _studentRepo.GetStateData();
+            if (student != null && student.Count > 0)
+            {
+                return Json(new { Success = true, data = student });
+            }
+            else
+            {
+                return Json(new { Success = false, Message = "No Data Found" });
+            }
+
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetCityData(int StateID)
+        {
+            var student = await _studentRepo.GetCityData(StateID);
+            if (student != null && student.Count > 0)
+            {
+                return Json(new { Success = true, data = student });
+            }
+            else
+            {
+                return Json(new { Success = false, Message = "No Data Found" });
+            }
+
+        }
+
 
 
         [HttpPost]

@@ -82,5 +82,83 @@ namespace practice1.Repository.Implementation
             }
 
         }
+
+        public async Task<List<Student>> GetStateData()
+        {
+            try
+            {
+                string query = "SELECt StateId As Value,StateName As Text FROM StateMaster";
+
+                await _conn.OpenAsync();
+                List<Student> result = new List<Student>();
+
+                using (var cmd = new SqlCommand(query, _conn))
+                {
+                    var reader = await cmd.ExecuteReaderAsync();
+
+                    while (await reader.ReadAsync())
+                    {
+                        var student = new Student
+                        {
+                            Value = Convert.ToInt32(reader["Value"]),                            
+                            Text = reader["Text"].ToString()
+                        };
+                        result.Add(student);
+
+                    }
+
+                }
+                await _conn.CloseAsync();
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in AddStudent: {ex.Message}");
+                await _conn.CloseAsync();
+                return null;
+            }
+
+        }
+        public async Task<List<Student>> GetCityData(int StateID)
+        {
+            var result = new List<Student>();
+
+            try
+            {
+                string query = "SELECT CityId AS Value, CityName AS Text FROM CityMaster WHERE StateId = @StateID";
+
+                using (var conn = _conn)
+                {
+                    await conn.OpenAsync();
+
+                    using (var cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@StateID", StateID);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var student = new Student
+                                {
+                                    Value = Convert.ToInt32(reader["Value"]),
+                                    Text = reader["Text"].ToString()
+                                };
+
+                                result.Add(student);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetCityData: {ex.Message}");
+                return null;
+            }
+
+            return result;
+        }
     }
 }
